@@ -1,7 +1,7 @@
 /** @type {import('./_venera_.js')} */
 
 /**
- * 修改自 https://github.com/venera-app/venera-configs/blob/main/copy_manga.js 38ec0f2aa14fe6dbb6a768c838297d609ea611d4
+ * 修改自 https://github.com/sakana164/venera-configs/blob/main/copy_manga.js 38ec0f2aa14fe6dbb6a768c838297d609ea611d4
  */
 
 class HotManga extends ComicSource {
@@ -14,7 +14,7 @@ class HotManga extends ComicSource {
 
     minAppVersion = "1.6.0"
 
-    url = "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@main/hot_manga.js";
+    url = "https://cdn.jsdelivr.net/gh/sakana164/venera-configs@main/hot_manga.js";
 
     static defaultImageQuality = "1500"
 
