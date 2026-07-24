@@ -38,6 +38,10 @@ class Nhentai extends ComicSource {
             },
             onLoginSuccess: async () => {
                 await this.persistAuthFromCookies()
+                if(!token){
+                    throw "access_token not found"
+                }
+                console.log("nhentai login success") 
             },
         },
 
@@ -317,7 +321,13 @@ class Nhentai extends ComicSource {
 
     async persistAuthFromCookies() {
         let cookies = await Network.getCookies(this.baseUrl)
+        console.log(
+        "nhentai cookies: " + JSON.stringify(cookies)
+        )
         let accessToken = this.findAccessToken(cookies)
+        console.log(
+        "nhentai accessToken: " + accessToken
+        )
         if (accessToken) {
             this.saveData("accessToken", accessToken)
         }
