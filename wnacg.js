@@ -21,21 +21,16 @@ class Wnacg extends ComicSource {
         if (selection === undefined || selection === null) selection = 0
         selection = parseInt(selection)
 
-        if (selection === 0) {
-            // 选择自定义域名
-            let domain0 = this.loadSetting('domain0')
-            if (!domain0 || domain0.trim() === '') {
-                throw 'Custom domain is not set'
-            }
-            return `https://${domain0.trim()}`
-        } else {
-            // 选择获取的域名 (Domain 1-3)
-            let index = selection - 1
-            if (index >= Wnacg.domains.length) {
-                throw 'Selected domain is unavailable'
-            }
-            return `https://${Wnacg.domains[index]}`
+        if (Number.isInteger(selection) && selection > 0 && selection <= Wnacg.domains.length) {
+            return `https://${Wnacg.domains[selection - 1]}`
         }
+
+        // 域名列表为空或已保存的选择不可用时，回退到自定义域名
+        let domain0 = this.loadSetting('domain0')
+        if (!domain0 || domain0.trim() === '') {
+            throw 'Custom domain is not set'
+        }
+        return `https://${domain0.trim()}`
     }
 
     overwriteDomains(domains) {
@@ -88,7 +83,7 @@ class Wnacg extends ComicSource {
      * @param showConfirmDialog {boolean}
      */
     async refreshDomains(showConfirmDialog) {
-        let url = "https://wn01.link/"
+        let url = "https://wnacglink.com/"
         let title = ""
         let message = ""
         let domains = []
@@ -97,32 +92,32 @@ class Wnacg extends ComicSource {
             let res = await fetch(url)
             if (res.status == 200) {
                 let html = await res.text()
-                let document = new HtmlDocument(html)
-                // 提取所有链接
-                let links = document.querySelectorAll("a[href]")
+                let hrefs = []
+                let configMatch = html.match(/window\.__INITIAL_CONFIG__\s*=\s*(\{[\s\S]*?\});/)
+                if (configMatch) {
+                    let config = JSON.parse(configMatch[1])
+                    if (Array.isArray(config.sites)) {
+                        for (let site of config.sites) {
+                            if (site && typeof site.url === "string") hrefs.push(site.url)
+                        }
+                    }
+                }
+
                 let seenDomains = new Set()
 
-                for (let link of links) {
-                    let href = link.attributes["href"]
+                for (let href of hrefs) {
                     if (!href) continue
 
                     // 提取域名（支持 http:// 和 https://）
-                    let match = href.match(/^https?:\/\/([^\/]+)/)
+                    let match = href.match(/^https?:\/\/([^\/?#]+)/i)
                     if (match) {
-                        let domain = match[1]
-                        // 只提取有效的域名，排除 wn01.link 自身和其他无关链接
-                        if (domain &&
-                            domain.includes(".") &&
-                            !domain.includes("wn01.link") &&
-                            !domain.includes("google.cn") &&
-                            !domain.includes("cdn-cgi") &&
-                            !seenDomains.has(domain)) {
+                        let domain = match[1].toLowerCase().replace(/:\d+$/, "")
+                        if (!seenDomains.has(domain)) {
                             domains.push(domain)
                             seenDomains.add(domain)
                         }
                     }
                 }
-                document.dispose()
 
                 if (domains.length > 0) {
                     title = "Update Success"
