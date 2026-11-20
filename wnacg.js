@@ -483,9 +483,20 @@ class Wnacg extends ComicSource {
             for (let comicElement of comicElements) {
                 comics.push(this.parseComic(comicElement))
             }
-            let total = document.querySelectorAll("p.result > b")[0].text.replaceAll(',', '')
             const comicsPerPage = 24
-            let pages = Math.ceil(Number(total) / comicsPerPage)
+            let resultCount = document.querySelectorAll("p.result > b")[0]
+            let pages = 0
+            if (resultCount) {
+                let total = Number(resultCount.text.replaceAll(',', ''))
+                if (Number.isFinite(total)) pages = Math.ceil(total / comicsPerPage)
+            } else {
+                let pageLinks = document.querySelectorAll("div.f_left.paginator > a")
+                for (let pageLink of pageLinks) {
+                    let linkPage = Number(pageLink.text)
+                    if (Number.isInteger(linkPage)) pages = Math.max(pages, linkPage)
+                }
+                if (pages === 0 && comics.length > 0) pages = page + 1
+            }
             document.dispose()
             return {
                 comics: comics,
